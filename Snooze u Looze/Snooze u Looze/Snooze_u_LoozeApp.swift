@@ -19,9 +19,14 @@ struct Snooze_u_LoozeApp: App {
         // Set notification delegate
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
         
-        // Request notification permissions
+        // Request notification permissions immediately
         Task {
-            try? await NotificationService.shared.requestAuthorization()
+            do {
+                try await NotificationService.shared.requestAuthorization()
+                print("✅ Notification permissions granted")
+            } catch {
+                print("❌ Failed to get notification permissions: \(error)")
+            }
         }
         
         // Setup notification categories
@@ -40,6 +45,7 @@ struct Snooze_u_LoozeApp: App {
             .fullScreenCover(isPresented: $showAlarmRinging) {
                 if let alarm = currentAlarm {
                     AlarmRingingView(alarm: alarm) {
+                        print("🔔 AlarmRingingView dismissed")
                         showAlarmRinging = false
                         currentAlarm = nil
                     }
@@ -47,6 +53,7 @@ struct Snooze_u_LoozeApp: App {
             }
             .onAppear {
                 NotificationDelegate.shared.onAlarmTriggered = { alarm in
+                    print("🔔 Alarm triggered callback received - showing AlarmRingingView")
                     currentAlarm = alarm
                     showAlarmRinging = true
                 }
@@ -85,6 +92,7 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Observab
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
+        print("🔔 Notification received in foreground: \(notification.request.identifier)")
         handleAlarmNotification(notification)
         completionHandler([.banner, .sound])
     }
@@ -95,19 +103,25 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Observab
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
+        print("🔔 Notification tapped: \(response.notification.request.identifier)")
         handleAlarmNotification(response.notification)
         completionHandler()
     }
     
     private func handleAlarmNotification(_ notification: UNNotification) {
+        print("🔔 Handling alarm notification...")
         let userInfo = notification.request.content.userInfo
+        print("🔔 User info: \(userInfo)")
         
         guard let alarmIdString = userInfo["alarmId"] as? String,
               let alarmId = UUID(uuidString: alarmIdString),
               let taskString = userInfo["task"] as? String,
               let task = AlarmTask(rawValue: taskString) else {
+            print("❌ Failed to parse alarm notification data")
             return
         }
+        
+        print("🔔 Parsed alarm - ID: \(alarmId), Task: \(task)")
         
         // Create alarm object from notification data
         let alarm = Alarm(
@@ -117,6 +131,7 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Observab
             task: task
         )
         
+        print("🔔 Triggering alarm view...")
         DispatchQueue.main.async {
             self.onAlarmTriggered?(alarm)
         }

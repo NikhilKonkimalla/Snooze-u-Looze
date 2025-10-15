@@ -43,15 +43,23 @@ class AlarmViewModel: ObservableObject {
             task: task
         )
         
+        // OPTIMISTIC UPDATE: Add alarm to UI immediately
+        alarms.append(alarm)
+        notificationService.scheduleAlarm(alarm)
+        
         isLoading = true
         errorMessage = nil
         
+        // Try to sync with Supabase in background
         do {
-            let createdAlarm = try await supabaseService.createAlarm(alarm)
-            alarms.append(createdAlarm)
-            notificationService.scheduleAlarm(createdAlarm)
+            _ = try await supabaseService.createAlarm(alarm)
+            // Success - alarm already in list, just clear any errors
+            errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            // Failed to sync to Supabase, but alarm still works locally
+            print("⚠️ Failed to sync alarm to Supabase: \(error.localizedDescription)")
+            // Don't remove from local list - alarm still works!
+            errorMessage = "Alarm created locally (sync failed: \(error.localizedDescription))"
         }
         
         isLoading = false
@@ -60,21 +68,30 @@ class AlarmViewModel: ObservableObject {
     func toggleAlarm(_ alarm: Alarm) async {
         var updatedAlarm = alarm
         updatedAlarm.isActive.toggle()
+        await updateAlarm(updatedAlarm)
+    }
+    
+    func updateAlarm(_ alarm: Alarm) async {
+        // Update locally first
+        if let index = alarms.firstIndex(where: { $0.id == alarm.id }) {
+            alarms[index] = alarm
+        }
         
+        // Cancel existing notification
+        notificationService.cancelAlarm(id: alarm.id)
+        
+        // Schedule new notification if active
+        if alarm.isActive {
+            notificationService.scheduleAlarm(alarm)
+        }
+        
+        // Try to sync with Supabase
         do {
-            try await supabaseService.updateAlarm(updatedAlarm)
-            
-            if let index = alarms.firstIndex(where: { $0.id == alarm.id }) {
-                alarms[index] = updatedAlarm
-            }
-            
-            if updatedAlarm.isActive {
-                notificationService.scheduleAlarm(updatedAlarm)
-            } else {
-                notificationService.cancelAlarm(id: updatedAlarm.id)
-            }
+            try await supabaseService.updateAlarm(alarm)
+            errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            print("⚠️ Failed to sync alarm update to Supabase: \(error.localizedDescription)")
+            errorMessage = "Alarm updated locally (sync failed: \(error.localizedDescription))"
         }
     }
     

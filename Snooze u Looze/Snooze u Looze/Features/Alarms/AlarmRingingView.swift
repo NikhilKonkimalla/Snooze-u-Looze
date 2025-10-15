@@ -87,10 +87,12 @@ struct AlarmRingingView: View {
             }
         }
         .onAppear {
+            print("🔔 AlarmRingingView appeared")
             scale = 1.2
             soundService.startAlarm()
         }
         .onDisappear {
+            print("🔔 AlarmRingingView disappeared")
             soundService.stopAlarm()
         }
         .interactiveDismissDisabled()
@@ -107,4 +109,5 @@ struct AlarmRingingView: View {
         onDismiss: {}
     )
 }
+
 

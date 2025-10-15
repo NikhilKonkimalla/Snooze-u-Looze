@@ -68,7 +68,7 @@ class SupabaseService: ObservableObject {
             throw NSError(domain: "SupabaseService", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
         
-        let response: [Alarm] = try await client.database
+        let response: [Alarm] = try await client
             .from("alarms")
             .select()
             .eq("user_id", value: userId.uuidString)
@@ -79,7 +79,7 @@ class SupabaseService: ObservableObject {
     }
     
     func createAlarm(_ alarm: Alarm) async throws -> Alarm {
-        let response: Alarm = try await client.database
+        let response: Alarm = try await client
             .from("alarms")
             .insert(alarm)
             .select()
@@ -91,7 +91,7 @@ class SupabaseService: ObservableObject {
     }
     
     func updateAlarm(_ alarm: Alarm) async throws {
-        try await client.database
+        try await client
             .from("alarms")
             .update(alarm)
             .eq("id", value: alarm.id.uuidString)
@@ -99,7 +99,7 @@ class SupabaseService: ObservableObject {
     }
     
     func deleteAlarm(id: UUID) async throws {
-        try await client.database
+        try await client
             .from("alarms")
             .delete()
             .eq("id", value: id.uuidString)

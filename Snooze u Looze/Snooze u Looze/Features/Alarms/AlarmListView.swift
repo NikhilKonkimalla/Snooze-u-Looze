@@ -11,6 +11,7 @@ struct AlarmListView: View {
     @StateObject private var viewModel = AlarmViewModel.shared
     @StateObject private var authViewModel = AuthViewModel()
     @State private var showAddAlarm = false
+    @State private var alarmToEdit: Alarm?
     
     var body: some View {
         NavigationView {
@@ -19,6 +20,43 @@ struct AlarmListView: View {
                     .ignoresSafeArea()
                 
                 VStack {
+                    // Show error message if present
+                    if let errorMessage = viewModel.errorMessage {
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                            .padding()
+                            .background(Color.orange.opacity(0.2))
+                            .cornerRadius(8)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Show notification permission warning
+                    if !NotificationService.shared.isAuthorized {
+                        VStack(spacing: 8) {
+                            Text("⚠️ Notifications Disabled")
+                                .font(.headline)
+                                .foregroundColor(.red)
+                            
+                            Text("Alarms won't ring without notification permissions")
+                                .font(.caption)
+                                .foregroundColor(.textSecondary)
+                                .multilineTextAlignment(.center)
+                            
+                            Button("Enable Notifications") {
+                                Task {
+                                    try? await NotificationService.shared.requestAuthorization()
+                                }
+                            }
+                            .font(.caption)
+                            .foregroundColor(.accentPrimary)
+                        }
+                        .padding()
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
+                    }
+                    
                     if viewModel.alarms.isEmpty {
                         emptyState
                     } else {
@@ -50,6 +88,9 @@ struct AlarmListView: View {
             }
             .sheet(isPresented: $showAddAlarm) {
                 AddAlarmView()
+            }
+            .sheet(item: $alarmToEdit) { alarm in
+                EditAlarmView(alarm: alarm)
             }
             .task {
                 await viewModel.fetchAlarms()
@@ -95,6 +136,9 @@ struct AlarmListView: View {
                             Task {
                                 await viewModel.deleteAlarm(alarm)
                             }
+                        },
+                        onEdit: {
+                            alarmToEdit = alarm
                         }
                     )
                 }

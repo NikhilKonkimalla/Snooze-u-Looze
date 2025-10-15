@@ -32,13 +32,19 @@ class AlarmSoundService: ObservableObject {
     }
     
     func startAlarm() {
-        guard !isPlaying else { return }
+        print("🔊 Starting alarm sound...")
+        guard !isPlaying else { 
+            print("🔊 Alarm already playing")
+            return 
+        }
         
         // Try custom alarm sound first, fallback to system sound
         if let soundURL = Bundle.main.url(forResource: "alarm", withExtension: "mp3") ??
                           Bundle.main.url(forResource: "alarm", withExtension: "wav") {
+            print("🔊 Playing custom alarm sound")
             playCustomSound(url: soundURL)
         } else {
+            print("🔊 Playing system alarm sound")
             // Fallback: use system vibration + repeating tone
             playSystemAlarm()
         }
@@ -68,8 +74,8 @@ class AlarmSoundService: ObservableObject {
     }
     
     private func playSystemAlarm() {
-        // Play a system sound repeatedly using timer
-        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+        // Play a system sound repeatedly using timer - more frequent for louder effect
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             // System sound ID 1005 is a loud alert tone
             AudioServicesPlaySystemSound(1005)
             // Also vibrate
@@ -79,6 +85,7 @@ class AlarmSoundService: ObservableObject {
         // Play immediately
         AudioServicesPlaySystemSound(1005)
         AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+        print("🔊 System alarm started - playing every 1 second")
     }
 }
 

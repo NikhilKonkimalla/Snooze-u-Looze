@@ -11,6 +11,7 @@ struct AlarmCard: View {
     let alarm: Alarm
     let onToggle: () -> Void
     let onDelete: () -> Void
+    let onEdit: () -> Void
     
     var body: some View {
         HStack(spacing: 16) {
@@ -29,12 +30,34 @@ struct AlarmCard: View {
                     .fontWeight(.bold)
                     .foregroundColor(.textPrimary)
                 
-                Text(alarm.task.displayName)
-                    .font(.subheadline)
-                    .foregroundColor(.textSecondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(alarm.task.displayName)
+                        .font(.subheadline)
+                        .foregroundColor(.textSecondary)
+                    
+                    if let repeatDays = alarm.repeatDays, !repeatDays.isEmpty {
+                        HStack(spacing: 2) {
+                            Image(systemName: "repeat")
+                                .font(.caption2)
+                                .foregroundColor(.accentPrimary)
+                            
+                            Text(formatRepeatDays(repeatDays))
+                                .font(.caption2)
+                                .foregroundColor(.accentPrimary)
+                        }
+                    }
+                }
             }
             
             Spacer()
+            
+            // Edit Button
+            Button(action: onEdit) {
+                Image(systemName: "pencil.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.accentPrimary)
+            }
+            .padding(.trailing, 8)
             
             // Toggle Switch
             Toggle("", isOn: Binding(
@@ -53,6 +76,21 @@ struct AlarmCard: View {
             }
         }
     }
+    
+    private func formatRepeatDays(_ repeatDays: [Int]) -> String {
+        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        let sortedDays = repeatDays.sorted()
+        
+        if sortedDays == [1, 2, 3, 4, 5] {
+            return "Weekdays"
+        } else if sortedDays == [0, 6] {
+            return "Weekends"
+        } else if sortedDays.count == 7 {
+            return "Daily"
+        } else {
+            return sortedDays.map { dayNames[$0] }.joined(separator: ", ")
+        }
+    }
 }
 
 #Preview {
@@ -64,7 +102,8 @@ struct AlarmCard: View {
                 task: .brushingTeeth
             ),
             onToggle: {},
-            onDelete: {}
+            onDelete: {},
+            onEdit: {}
         )
         
         AlarmCard(
@@ -75,10 +114,12 @@ struct AlarmCard: View {
                 isActive: false
             ),
             onToggle: {},
-            onDelete: {}
+            onDelete: {},
+            onEdit: {}
         )
     }
     .padding()
     .background(Color.appBackground)
 }
+
 

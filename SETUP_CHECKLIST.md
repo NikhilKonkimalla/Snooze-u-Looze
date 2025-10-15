@@ -233,3 +233,5 @@ If you've checked all the boxes above, your Snooze u Looze app is fully function
 - Make sure all permissions are granted
 - Try restarting the app
 
+
+
