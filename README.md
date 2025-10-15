@@ -104,11 +104,20 @@ Snooze u Looze/
 
 The `web/` folder contains web-based components that complement the iOS app:
 
-### Password Reset Page
+### Complete Authentication Web Pages
+- **Password Reset** - Secure password reset with app redirect
+- **Confirm Signup** - Email confirmation for new users
+- **Magic Link** - Passwordless authentication flow
+- **Invite User** - User invitation acceptance
+- **Change Email** - Email address change confirmation
+- **Reauthentication** - Security identity verification
+
+**All pages feature:**
 - **Beautiful, responsive design** matching the iOS app theme
-- **Automatic app redirect** with reset tokens
+- **Automatic app redirect** with appropriate tokens
 - **Fallback handling** for users without the app installed
 - **Professional UI** with loading states and error handling
+- **Dark theme** with smooth animations and transitions
 
 **Deployment Options:**
 - GitHub Pages (free)
