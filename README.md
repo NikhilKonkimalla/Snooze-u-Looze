@@ -10,6 +10,7 @@ A unique alarm app that requires you to complete a task (like brushing your teet
 - 🔊 Continuous alarm sound until task is verified
 - 🌙 Beautiful dark-mode UI with minimalist design
 - 🎯 Two initial tasks: Brushing Teeth & Opening Laptop
+- 🌐 Web-based password reset with automatic app redirect
 
 ## Setup Instructions
 
@@ -82,9 +83,12 @@ Snooze u Looze/
 │   ├── Auth/            # Login/Signup views
 │   ├── Alarms/          # Alarm management views
 │   └── Camera/          # Camera & verification
-└── UI/
-    ├── Components/      # Reusable UI components
-    └── Theme/          # Design system
+├── UI/
+│   ├── Components/      # Reusable UI components
+│   └── Theme/          # Design system
+└── web/                # Web components
+    ├── password-reset.html  # Password reset page
+    └── README.md           # Web documentation
 ```
 
 ## How It Works
@@ -95,6 +99,24 @@ Snooze u Looze/
 4. **Take Photo**: Capture a photo of yourself doing the task
 5. **ML Verification**: The app uses Vision framework to verify the task
 6. **Alarm Stops**: Only stops when verification succeeds!
+
+## Web Components
+
+The `web/` folder contains web-based components that complement the iOS app:
+
+### Password Reset Page
+- **Beautiful, responsive design** matching the iOS app theme
+- **Automatic app redirect** with reset tokens
+- **Fallback handling** for users without the app installed
+- **Professional UI** with loading states and error handling
+
+**Deployment Options:**
+- GitHub Pages (free)
+- Netlify (free)
+- Vercel (free)
+- Any web hosting service
+
+See `web/README.md` for detailed setup instructions.
 
 ## Technical Stack
 
@@ -139,6 +161,8 @@ Snooze u Looze/
 ## License
 
 Created by Nikhil Konkimalla - October 2025
+
+
 
 
 

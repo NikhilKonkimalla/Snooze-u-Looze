@@ -26,14 +26,21 @@ class AuthViewModel: ObservableObject {
     }
     
     func signIn() async {
-        guard validate() else { return }
+        print("🔐 Attempting sign in with email: \(email)")
+        guard validate() else { 
+            print("❌ Validation failed")
+            return 
+        }
         
         isLoading = true
         errorMessage = nil
         
         do {
+            print("🔐 Calling Supabase signIn...")
             try await supabaseService.signIn(email: email, password: password)
+            print("✅ Sign in successful")
         } catch {
+            print("❌ Sign in failed: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
         }
         
@@ -84,6 +91,8 @@ class AuthViewModel: ObservableObject {
         return true
     }
 }
+
+
 
 
 

@@ -19,8 +19,41 @@ struct CameraView: View {
     var body: some View {
         ZStack {
             // Camera Preview
-            CameraPreview(camera: camera)
-                .ignoresSafeArea()
+            if camera.isAuthorized {
+                CameraPreview(camera: camera)
+                    .ignoresSafeArea()
+            } else {
+                // Permission denied or not granted
+                VStack(spacing: 20) {
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.white)
+                    
+                    Text("Camera Access Required")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                    
+                    Text("Please enable camera access in Settings to verify your task")
+                        .font(.body)
+                        .foregroundColor(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    Button("Open Settings") {
+                        if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(settingsUrl)
+                        }
+                    }
+                    .padding()
+                    .background(Color.accentPrimary)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                }
+                .padding()
+                .background(Color.black.opacity(0.8))
+                .cornerRadius(20)
+            }
             
             // Overlay
             VStack {
@@ -118,12 +151,16 @@ class CameraModel: NSObject, ObservableObject {
     private var previewLayer: AVCaptureVideoPreviewLayer?
     
     func checkPermissions() {
+        print("📷 Checking camera permissions...")
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
+            print("✅ Camera already authorized")
             isAuthorized = true
             setupCamera()
         case .notDetermined:
+            print("❓ Camera permission not determined - requesting...")
             AVCaptureDevice.requestAccess(for: .video) { granted in
+                print("📷 Camera permission result: \(granted)")
                 DispatchQueue.main.async {
                     self.isAuthorized = granted
                     if granted {
@@ -131,12 +168,20 @@ class CameraModel: NSObject, ObservableObject {
                     }
                 }
             }
-        default:
+        case .denied:
+            print("❌ Camera permission denied")
+            isAuthorized = false
+        case .restricted:
+            print("❌ Camera permission restricted")
+            isAuthorized = false
+        @unknown default:
+            print("❌ Unknown camera permission status")
             isAuthorized = false
         }
     }
     
     func setupCamera() {
+        print("📷 Setting up camera...")
         let session = AVCaptureSession()
         session.sessionPreset = .photo
         

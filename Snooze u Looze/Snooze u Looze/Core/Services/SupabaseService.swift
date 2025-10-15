@@ -79,15 +79,22 @@ class SupabaseService: ObservableObject {
     }
     
     func createAlarm(_ alarm: Alarm) async throws -> Alarm {
-        let response: Alarm = try await client
-            .from("alarms")
-            .insert(alarm)
-            .select()
-            .single()
-            .execute()
-            .value
-        
-        return response
+        print("💾 Creating alarm in Supabase: \(alarm.id)")
+        do {
+            let response: Alarm = try await client
+                .from("alarms")
+                .insert(alarm)
+                .select()
+                .single()
+                .execute()
+                .value
+            
+            print("✅ Alarm created successfully in Supabase")
+            return response
+        } catch {
+            print("❌ Failed to create alarm in Supabase: \(error)")
+            throw error
+        }
     }
     
     func updateAlarm(_ alarm: Alarm) async throws {
