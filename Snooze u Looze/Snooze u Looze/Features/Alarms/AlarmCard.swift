@@ -13,113 +13,150 @@ struct AlarmCard: View {
     let onDelete: () -> Void
     let onEdit: () -> Void
     
+    @State private var showDeleteConfirmation = false
+    @State private var isToggled: Bool
+    
+    init(alarm: Alarm, onToggle: @escaping () -> Void, onDelete: @escaping () -> Void, onEdit: @escaping () -> Void) {
+        self.alarm = alarm
+        self.onToggle = onToggle
+        self.onDelete = onDelete
+        self.onEdit = onEdit
+        self._isToggled = State(initialValue: alarm.isActive)
+    }
+    
     var body: some View {
-        HStack(spacing: 16) {
-            // Task Icon
-            Image(systemName: alarm.task.icon)
-                .font(.system(size: 28))
-                .foregroundColor(.accentPrimary)
-                .frame(width: 50, height: 50)
-                .background(Color.accentPrimary.opacity(0.15))
-                .cornerRadius(12)
-            
-            // Time and Task Info
-            VStack(alignment: .leading, spacing: 4) {
-                Text(alarm.timeString)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.textPrimary)
-                
-                VStack(alignment: .leading, spacing: 2) {
+        VStack(spacing: 12) {
+            HStack {
+                // Time and task info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(alarm.timeString)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.textPrimary)
+                    
                     Text(alarm.task.displayName)
                         .font(.subheadline)
                         .foregroundColor(.textSecondary)
                     
                     if let repeatDays = alarm.repeatDays, !repeatDays.isEmpty {
-                        HStack(spacing: 2) {
-                            Image(systemName: "repeat")
-                                .font(.caption2)
-                                .foregroundColor(.accentPrimary)
-                            
-                            Text(formatRepeatDays(repeatDays))
-                                .font(.caption2)
-                                .foregroundColor(.accentPrimary)
-                        }
+                        Text(repeatDaysText)
+                            .font(.caption)
+                            .foregroundColor(.accentPrimary)
                     }
                 }
+                
+                Spacer()
+                
+                // Toggle switch
+                Toggle("", isOn: $isToggled)
+                    .toggleStyle(SwitchToggleStyle(tint: .accentPrimary))
+                    .onChange(of: isToggled) { _, newValue in
+                        print("🔧 AlarmCard toggle changed to: \(newValue)")
+                        onToggle()
+                    }
             }
             
-            Spacer()
-            
-            // Edit Button
-            Button(action: onEdit) {
-                Image(systemName: "pencil.circle.fill")
-                    .font(.title2)
+            // Action buttons
+            HStack(spacing: 12) {
+                Button(action: onEdit) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "pencil")
+                        Text("Edit")
+                    }
+                    .font(.caption)
                     .foregroundColor(.accentPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.accentPrimary.opacity(0.1))
+                    .cornerRadius(8)
+                }
+                
+                Spacer()
+                
+                Button(action: {
+                    showDeleteConfirmation = true
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "trash")
+                        Text("Delete")
+                    }
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(8)
+                }
             }
-            .padding(.trailing, 8)
-            
-            // Toggle Switch
-            Toggle("", isOn: Binding(
-                get: { alarm.isActive },
-                set: { _ in onToggle() }
-            ))
-            .tint(.accentPrimary)
         }
-        .padding(AppTheme.cardPadding)
-        .roundedCard()
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button(role: .destructive) {
+        .padding()
+        .background(Color.cardBackground)
+        .cornerRadius(AppTheme.cornerRadius)
+        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+        .onAppear {
+            // Sync toggle state with alarm data when view appears
+            isToggled = alarm.isActive
+        }
+        .onChange(of: alarm.isActive) { _, newValue in
+            // Sync toggle state when alarm data changes externally
+            isToggled = newValue
+        }
+        .alert("Delete Alarm", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
                 onDelete()
-            } label: {
-                Label("Delete", systemImage: "trash")
             }
+        } message: {
+            Text("Are you sure you want to delete this alarm? This action cannot be undone.")
         }
     }
     
-    private func formatRepeatDays(_ repeatDays: [Int]) -> String {
-        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-        let sortedDays = repeatDays.sorted()
+    private var repeatDaysText: String {
+        guard let repeatDays = alarm.repeatDays, !repeatDays.isEmpty else { return "" }
         
-        if sortedDays == [1, 2, 3, 4, 5] {
-            return "Weekdays"
-        } else if sortedDays == [0, 6] {
+        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        let selectedDays = repeatDays.map { dayNames[$0] }
+        
+        if selectedDays.count == 7 {
+            return "Every day"
+        } else if selectedDays.count == 2 && repeatDays.contains(0) && repeatDays.contains(6) {
             return "Weekends"
-        } else if sortedDays.count == 7 {
-            return "Daily"
+        } else if selectedDays.count == 5 && !repeatDays.contains(0) && !repeatDays.contains(6) {
+            return "Weekdays"
         } else {
-            return sortedDays.map { dayNames[$0] }.joined(separator: ", ")
+            return selectedDays.joined(separator: ", ")
         }
     }
 }
 
 #Preview {
-    VStack {
+    VStack(spacing: 16) {
         AlarmCard(
             alarm: Alarm(
                 userId: UUID(),
-                alarmTime: Date(),
-                task: .brushingTeeth
+                alarmTime: Calendar.current.date(bySettingHour: 7, minute: 30, second: 0, of: Date()) ?? Date(),
+                task: .brushingTeeth,
+                isActive: true,
+                repeatDays: [1, 2, 3, 4, 5] // Weekdays
             ),
-            onToggle: {},
-            onDelete: {},
-            onEdit: {}
+            onToggle: { print("Toggle") },
+            onDelete: { print("Delete") },
+            onEdit: { print("Edit") }
         )
         
         AlarmCard(
             alarm: Alarm(
                 userId: UUID(),
-                alarmTime: Date(),
+                alarmTime: Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date(),
                 task: .openingLaptop,
-                isActive: false
+                isActive: false,
+                repeatDays: [0, 6] // Weekends
             ),
-            onToggle: {},
-            onDelete: {},
-            onEdit: {}
+            onToggle: { print("Toggle") },
+            onDelete: { print("Delete") },
+            onEdit: { print("Edit") }
         )
     }
     .padding()
-    .background(Color.appBackground)
+    .preferredColorScheme(.dark)
 }
-
-

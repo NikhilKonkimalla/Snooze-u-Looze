@@ -19,9 +19,16 @@ class NotificationService: NSObject, ObservableObject {
     }
     
     func requestAuthorization() async throws {
+        // Request critical alert permissions first
+        let criticalGranted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge, .criticalAlert])
+        
+        // Then request regular notification permissions
         let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+        
         await MainActor.run {
             self.isAuthorized = granted
+            print("✅ Notification permissions granted: \(granted)")
+            print("✅ Critical alert permissions granted: \(criticalGranted)")
         }
     }
     
@@ -56,11 +63,14 @@ class NotificationService: NSObject, ObservableObject {
         let content = UNMutableNotificationContent()
         content.title = "Time to wake up!"
         content.body = "Complete your task: \(alarm.task.displayName)"
-        content.sound = .defaultCritical
+        // Use critical sound for maximum volume and to bypass Do Not Disturb
+        content.sound = UNNotificationSound.defaultCritical
         content.categoryIdentifier = Constants.Notifications.alarmCategory
         content.userInfo = ["alarmId": alarm.id.uuidString, "task": alarm.task.rawValue]
         content.interruptionLevel = .critical
         content.relevanceScore = 1.0
+        
+        print("🔔 Scheduled notification with critical sound and interruption level")
         
         // Handle repeat days
         if let repeatDays = alarm.repeatDays, !repeatDays.isEmpty {
@@ -90,6 +100,8 @@ class NotificationService: NSObject, ObservableObject {
                 print("❌ Error scheduling notification: \(error)")
             } else {
                 print("✅ One-time notification scheduled successfully!")
+                print("✅ Notification ID: \(alarm.id.uuidString)")
+                print("✅ Trigger date: \(triggerDate)")
             }
         }
     }
@@ -130,6 +142,38 @@ class NotificationService: NSObject, ObservableObject {
         }
     }
     
+    // MARK: - Debug Methods
+    
+    func checkPendingNotifications() {
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            print("🔍 Pending notifications: \(requests.count)")
+            for request in requests {
+                print("🔍 - ID: \(request.identifier)")
+                print("🔍 - Title: \(request.content.title)")
+                print("🔍 - Trigger: \(request.trigger?.description ?? "nil")")
+            }
+        }
+    }
+    
+    func testNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "Test Notification"
+        content.body = "This is a test notification"
+        content.sound = UNNotificationSound.defaultCritical
+        content.interruptionLevel = .critical
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
+        let request = UNNotificationRequest(identifier: "test-\(UUID().uuidString)", content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ Test notification failed: \(error)")
+            } else {
+                print("✅ Test notification scheduled!")
+            }
+        }
+    }
+    
     func cancelAllAlarms() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
@@ -139,7 +183,8 @@ class NotificationService: NSObject, ObservableObject {
         let content = UNMutableNotificationContent()
         content.title = "Test Alarm"
         content.body = "This is a test notification"
-        content.sound = .defaultCritical
+        content.sound = UNNotificationSound.defaultCritical
+        content.interruptionLevel = .critical
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
         let request = UNNotificationRequest(identifier: "test", content: content, trigger: trigger)

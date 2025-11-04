@@ -39,7 +39,9 @@ struct Alarm: Identifiable, Codable {
     var timeString: String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
-        return formatter.string(from: alarmTime)
+        let timeString = formatter.string(from: alarmTime)
+        // Replace regular space with non-breaking space to prevent AM/PM wrapping
+        return timeString.replacingOccurrences(of: " ", with: "\u{00A0}")
     }
     
     var nextTriggerDate: Date? {

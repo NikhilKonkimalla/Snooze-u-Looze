@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Combine
+import SwiftUI
 
 @MainActor
 class AuthViewModel: ObservableObject {
@@ -14,49 +14,34 @@ class AuthViewModel: ObservableObject {
     @Published var password = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var isAuthenticated = false
     
     private let supabaseService = SupabaseService.shared
-    private var cancellables = Set<AnyCancellable>()
-    
-    init() {
-        supabaseService.$currentUser
-            .map { $0 != nil }
-            .assign(to: &$isAuthenticated)
-    }
     
     func signIn() async {
-        print("🔐 Attempting sign in with email: \(email)")
-        guard validate() else { 
-            print("❌ Validation failed")
-            return 
-        }
-        
         isLoading = true
         errorMessage = nil
         
         do {
-            print("🔐 Calling Supabase signIn...")
             try await supabaseService.signIn(email: email, password: password)
             print("✅ Sign in successful")
         } catch {
-            print("❌ Sign in failed: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
+            print("❌ Sign in failed: \(error)")
         }
         
         isLoading = false
     }
     
     func signUp() async {
-        guard validate() else { return }
-        
         isLoading = true
         errorMessage = nil
         
         do {
             try await supabaseService.signUp(email: email, password: password)
+            print("✅ Sign up successful")
         } catch {
             errorMessage = error.localizedDescription
+            print("❌ Sign up failed: \(error)")
         }
         
         isLoading = false
@@ -65,34 +50,10 @@ class AuthViewModel: ObservableObject {
     func signOut() async {
         do {
             try await supabaseService.signOut()
+            print("✅ Sign out successful")
         } catch {
-            errorMessage = error.localizedDescription
+            print("❌ Sign out failed: \(error)")
         }
-    }
-    
-    private func validate() -> Bool {
-        errorMessage = nil
-        
-        guard !email.isEmpty else {
-            errorMessage = "Please enter your email"
-            return false
-        }
-        
-        guard email.contains("@") else {
-            errorMessage = "Please enter a valid email"
-            return false
-        }
-        
-        guard password.count >= 6 else {
-            errorMessage = "Password must be at least 6 characters"
-            return false
-        }
-        
-        return true
     }
 }
-
-
-
-
 

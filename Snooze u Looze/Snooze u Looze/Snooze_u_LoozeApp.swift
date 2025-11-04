@@ -94,7 +94,7 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Observab
     ) {
         print("🔔 Notification received in foreground: \(notification.request.identifier)")
         handleAlarmNotification(notification)
-        completionHandler([.banner, .sound])
+        completionHandler([.banner, .sound]) // Include .sound for notification audio
     }
     
     // Handle notification tap
@@ -132,6 +132,11 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Observab
         )
         
         print("🔔 Triggering alarm view...")
+        print("🔔 Starting continuous alarm sound...")
+        
+        // Start the continuous alarm sound immediately
+        AlarmSoundService.shared.startAlarm()
+        
         DispatchQueue.main.async {
             self.onAlarmTriggered?(alarm)
         }

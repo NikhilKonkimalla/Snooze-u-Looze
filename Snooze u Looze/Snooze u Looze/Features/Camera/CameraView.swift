@@ -19,9 +19,38 @@ struct CameraView: View {
     var body: some View {
         ZStack {
             // Camera Preview
-            if camera.isAuthorized {
+            if camera.isAuthorized && camera.isSessionRunning {
                 CameraPreview(camera: camera)
                     .ignoresSafeArea()
+            } else if let error = camera.setupError {
+                // Camera setup error
+                VStack(spacing: 20) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.orange)
+                    
+                    Text("Camera Error")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                    
+                    Text(error)
+                        .font(.body)
+                        .foregroundColor(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    Button("Retry") {
+                        camera.setupCamera()
+                    }
+                    .padding()
+                    .background(Color.accentPrimary)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                }
+                .padding()
+                .background(Color.black.opacity(0.8))
+                .cornerRadius(20)
             } else {
                 // Permission denied or not granted
                 VStack(spacing: 20) {
@@ -74,17 +103,20 @@ struct CameraView: View {
                 
                 // Capture Button
                 Button(action: {
+                    print("📷 Capture button pressed")
                     camera.capturePhoto()
                 }) {
                     Circle()
-                        .fill(Color.white)
+                        .fill(camera.isSessionRunning ? Color.white : Color.gray)
                         .frame(width: 70, height: 70)
                         .overlay(
                             Circle()
-                                .stroke(Color.white, lineWidth: 4)
+                                .stroke(camera.isSessionRunning ? Color.white : Color.gray, lineWidth: 4)
                                 .frame(width: 82, height: 82)
                         )
                 }
+                .disabled(!camera.isSessionRunning)
+                .opacity(camera.isSessionRunning ? 1.0 : 0.6)
                 .padding(.bottom, 40)
             }
             
@@ -105,7 +137,12 @@ struct CameraView: View {
             }
         }
         .onAppear {
+            print("📷 CameraView appeared - checking permissions")
             camera.checkPermissions()
+        }
+        .onDisappear {
+            print("📷 CameraView disappeared - stopping camera session")
+            camera.stopSession()
         }
         .onChange(of: camera.capturedImage) { _, newImage in
             if let image = newImage {
@@ -145,6 +182,8 @@ struct CameraView: View {
 class CameraModel: NSObject, ObservableObject {
     @Published var capturedImage: UIImage?
     @Published var isAuthorized = false
+    @Published var isSessionRunning = false
+    @Published var setupError: String?
     
     var captureSession: AVCaptureSession?
     private var photoOutput: AVCapturePhotoOutput?
@@ -152,58 +191,113 @@ class CameraModel: NSObject, ObservableObject {
     
     func checkPermissions() {
         print("📷 Checking camera permissions...")
-        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        print("📷 Current camera permission status: \(status.rawValue)")
+        
+        switch status {
         case .authorized:
             print("✅ Camera already authorized")
-            isAuthorized = true
-            setupCamera()
+            DispatchQueue.main.async {
+                self.isAuthorized = true
+                self.setupCamera()
+            }
         case .notDetermined:
             print("❓ Camera permission not determined - requesting...")
             AVCaptureDevice.requestAccess(for: .video) { granted in
-                print("📷 Camera permission result: \(granted)")
+                print("📷 Camera permission request result: \(granted)")
                 DispatchQueue.main.async {
                     self.isAuthorized = granted
                     if granted {
+                        print("✅ Camera permission granted - setting up camera")
                         self.setupCamera()
+                    } else {
+                        print("❌ Camera permission denied by user")
                     }
                 }
             }
         case .denied:
-            print("❌ Camera permission denied")
-            isAuthorized = false
+            print("❌ Camera permission denied - user must enable in Settings")
+            DispatchQueue.main.async {
+                self.isAuthorized = false
+            }
         case .restricted:
-            print("❌ Camera permission restricted")
-            isAuthorized = false
+            print("❌ Camera permission restricted - device policy prevents access")
+            DispatchQueue.main.async {
+                self.isAuthorized = false
+            }
         @unknown default:
-            print("❌ Unknown camera permission status")
-            isAuthorized = false
+            print("❌ Unknown camera permission status: \(status.rawValue)")
+            DispatchQueue.main.async {
+                self.isAuthorized = false
+            }
         }
     }
     
     func setupCamera() {
         print("📷 Setting up camera...")
+        
+        // Clear any previous error
+        setupError = nil
+        
         let session = AVCaptureSession()
         session.sessionPreset = .photo
         
-        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-              let input = try? AVCaptureDeviceInput(device: device) else {
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+            let error = "Failed to get camera device"
+            print("❌ \(error)")
+            DispatchQueue.main.async {
+                self.setupError = error
+            }
+            return
+        }
+        
+        guard let input = try? AVCaptureDeviceInput(device: device) else {
+            let error = "Failed to create camera input"
+            print("❌ \(error)")
+            DispatchQueue.main.async {
+                self.setupError = error
+            }
             return
         }
         
         if session.canAddInput(input) {
             session.addInput(input)
+            print("✅ Camera input added successfully")
+        } else {
+            let error = "Cannot add camera input"
+            print("❌ \(error)")
+            DispatchQueue.main.async {
+                self.setupError = error
+            }
+            return
         }
         
         let output = AVCapturePhotoOutput()
         if session.canAddOutput(output) {
             session.addOutput(output)
             photoOutput = output
+            print("✅ Photo output added successfully")
+        } else {
+            let error = "Cannot add photo output"
+            print("❌ \(error)")
+            DispatchQueue.main.async {
+                self.setupError = error
+            }
+            return
         }
         
         captureSession = session
         
         DispatchQueue.global(qos: .userInitiated).async {
             session.startRunning()
+            print("📷 Camera session started: \(session.isRunning)")
+            
+            DispatchQueue.main.async {
+                self.isSessionRunning = session.isRunning
+                if !session.isRunning {
+                    self.setupError = "Camera session failed to start"
+                }
+            }
         }
     }
     
@@ -237,28 +331,59 @@ extension CameraModel: AVCapturePhotoCaptureDelegate {
 struct CameraPreview: UIViewRepresentable {
     @ObservedObject var camera: CameraModel
     
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView(frame: .zero)
-        
-        if let session = camera.captureSession {
-            let previewLayer = AVCaptureVideoPreviewLayer(session: session)
-            previewLayer.videoGravity = .resizeAspectFill
-            view.layer.addSublayer(previewLayer)
-            
-            DispatchQueue.main.async {
-                previewLayer.frame = view.bounds
-            }
-        }
-        
+    func makeUIView(context: Context) -> CameraPreviewView {
+        let view = CameraPreviewView()
+        view.setupCamera(camera.captureSession)
         return view
     }
     
-    func updateUIView(_ uiView: UIView, context: Context) {
-        if let previewLayer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer {
-            DispatchQueue.main.async {
-                previewLayer.frame = uiView.bounds
-            }
+    func updateUIView(_ uiView: CameraPreviewView, context: Context) {
+        // Update camera session if it changed
+        if uiView.cameraSession !== camera.captureSession {
+            uiView.setupCamera(camera.captureSession)
         }
+    }
+}
+
+class CameraPreviewView: UIView {
+    private var previewLayer: AVCaptureVideoPreviewLayer?
+    var cameraSession: AVCaptureSession?
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .black
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        backgroundColor = .black
+    }
+    
+    func setupCamera(_ session: AVCaptureSession?) {
+        print("📷 Setting up camera preview")
+        
+        // Remove existing preview layer
+        previewLayer?.removeFromSuperlayer()
+        
+        guard let session = session else {
+            print("❌ No camera session provided")
+            return
+        }
+        
+        cameraSession = session
+        
+        let newPreviewLayer = AVCaptureVideoPreviewLayer(session: session)
+        newPreviewLayer.videoGravity = .resizeAspectFill
+        layer.addSublayer(newPreviewLayer)
+        previewLayer = newPreviewLayer
+        
+        print("✅ Camera preview layer added")
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        previewLayer?.frame = bounds
+        print("📷 Camera preview frame updated: \(bounds)")
     }
 }
 

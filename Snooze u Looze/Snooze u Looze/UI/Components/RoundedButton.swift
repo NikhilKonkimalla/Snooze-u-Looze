@@ -6,64 +6,82 @@
 //
 
 import SwiftUI
-import Foundation
 
 struct RoundedButton: View {
     let title: String
     let action: () -> Void
-    var style: ButtonStyle = .primary
     var isEnabled: Bool = true
+    var style: ButtonStyle = .primary
     
     enum ButtonStyle {
         case primary
         case secondary
         case destructive
-        
-        var backgroundColor: Color {
-            switch self {
-            case .primary:
-                return .accentPrimary
-            case .secondary:
-                return .cardBackground
-            case .destructive:
-                return .red.opacity(0.8)
-            }
-        }
-        
-        var foregroundColor: Color {
-            switch self {
-            case .primary:
-                return .white
-            case .secondary:
-                return .textPrimary
-            case .destructive:
-                return .white
-            }
-        }
     }
     
     var body: some View {
         Button(action: action) {
             Text(title)
                 .font(.headline)
-                .foregroundColor(style.foregroundColor)
+                .fontWeight(.semibold)
+                .foregroundColor(foregroundColor)
                 .frame(maxWidth: .infinity)
-                .frame(height: AppTheme.buttonHeight)
-                .background(isEnabled ? style.backgroundColor : Color.gray.opacity(0.3))
+                .padding(.vertical, AppTheme.spacing)
+                .background(backgroundColor)
                 .cornerRadius(AppTheme.cornerRadius)
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                        .stroke(borderColor, lineWidth: 1)
+                )
         }
         .disabled(!isEnabled)
+        .opacity(isEnabled ? 1.0 : 0.6)
+    }
+    
+    private var foregroundColor: Color {
+        switch style {
+        case .primary:
+            return .white
+        case .secondary:
+            return .accentPrimary
+        case .destructive:
+            return .white
+        }
+    }
+    
+    private var backgroundColor: Color {
+        switch style {
+        case .primary:
+            return isEnabled ? .accentPrimary : .gray
+        case .secondary:
+            return .clear
+        case .destructive:
+            return isEnabled ? .red : .gray
+        }
+    }
+    
+    private var borderColor: Color {
+        switch style {
+        case .primary:
+            return .clear
+        case .secondary:
+            return .accentPrimary
+        case .destructive:
+            return .clear
+        }
     }
 }
 
 #Preview {
-    VStack(spacing: 20) {
-        RoundedButton(title: "Primary Button", action: {})
-        RoundedButton(title: "Secondary Button", action: {}, style: .secondary)
-        RoundedButton(title: "Destructive Button", action: {}, style: .destructive)
-        RoundedButton(title: "Disabled Button", action: {}, isEnabled: false)
+    VStack(spacing: 16) {
+        RoundedButton(title: "Primary Button") { }
+        
+        RoundedButton(title: "Secondary Button", action: { }, style: .secondary)
+        
+        RoundedButton(title: "Destructive Button", action: { }, style: .destructive)
+        
+        RoundedButton(title: "Disabled Button", action: { }, isEnabled: false)
     }
     .padding()
-    .background(Color.appBackground)
+    .preferredColorScheme(.dark)
 }
-

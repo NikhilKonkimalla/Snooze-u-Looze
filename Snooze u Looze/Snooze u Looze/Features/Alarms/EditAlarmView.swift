@@ -31,24 +31,21 @@ struct EditAlarmView: View {
                 Color.appBackground
                     .ignoresSafeArea()
                 
-                VStack(spacing: AppTheme.spacing) {
-                    // Time Picker
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Alarm Time")
-                            .font(.headline)
-                            .foregroundColor(.textPrimary)
-                        
-                        DatePicker(
-                            "",
-                            selection: $selectedTime,
-                            displayedComponents: .hourAndMinute
-                        )
-                        .datePickerStyle(.wheel)
-                        .labelsHidden()
-                        .colorScheme(.dark)
-                    }
-                    .padding()
-                    .roundedCard()
+                ScrollView {
+                    VStack(spacing: AppTheme.spacing) {
+                        // Time Picker
+                        VStack(alignment: .leading, spacing: 8) {
+                            DatePicker(
+                                "",
+                                selection: $selectedTime,
+                                displayedComponents: .hourAndMinute
+                            )
+                            .datePickerStyle(.wheel)
+                            .labelsHidden()
+                            .colorScheme(.dark)
+                        }
+                        .padding()
+                        .roundedCard()
                     
                     // Task Selection
                     VStack(alignment: .leading, spacing: 12) {
@@ -133,10 +130,12 @@ struct EditAlarmView: View {
                         }
                     )
                     .padding(.horizontal)
+                    }
+                    .padding()
+                    .padding(.bottom, 20) // Extra bottom padding for save button
                 }
-                .padding()
             }
-            .navigationTitle("Edit Alarm")
+            .navigationTitle("Alarm Time")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
