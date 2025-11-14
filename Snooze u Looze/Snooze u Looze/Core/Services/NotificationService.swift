@@ -1,10 +1,3 @@
-//
-//  NotificationService.swift
-//  Snooze u Looze
-//
-//  Created by Nikhil Konkimalla on 10/12/25.
-//
-
 import Foundation
 import UserNotifications
 
@@ -27,8 +20,8 @@ class NotificationService: NSObject, ObservableObject {
         
         await MainActor.run {
             self.isAuthorized = granted
-            print("✅ Notification permissions granted: \(granted)")
-            print("✅ Critical alert permissions granted: \(criticalGranted)")
+            print("Notification permissions granted: \(granted)")
+            print("Critical alert permissions granted: \(criticalGranted)")
         }
     }
     
@@ -41,11 +34,11 @@ class NotificationService: NSObject, ObservableObject {
     }
     
     func scheduleAlarm(_ alarm: Alarm) {
-        print("🔔 Attempting to schedule alarm for: \(alarm.timeString)")
-        print("🔔 Is authorized: \(isAuthorized)")
+        print("Attempting to schedule alarm for: \(alarm.timeString)")
+        print("Is authorized: \(isAuthorized)")
         
         guard isAuthorized else { 
-            print("❌ Not authorized to send notifications - requesting permissions...")
+            print("Not authorized to send notifications - requesting permissions...")
             Task {
                 do {
                     try await requestAuthorization()
@@ -54,7 +47,7 @@ class NotificationService: NSObject, ObservableObject {
                         scheduleAlarm(alarm)
                     }
                 } catch {
-                    print("❌ Failed to get notification permissions: \(error)")
+                    print("Failed to get notification permissions: \(error)")
                 }
             }
             return 
@@ -70,7 +63,7 @@ class NotificationService: NSObject, ObservableObject {
         content.interruptionLevel = .critical
         content.relevanceScore = 1.0
         
-        print("🔔 Scheduled notification with critical sound and interruption level")
+        print("Scheduled notification with critical sound and interruption level")
         
         // Handle repeat days
         if let repeatDays = alarm.repeatDays, !repeatDays.isEmpty {
@@ -84,11 +77,11 @@ class NotificationService: NSObject, ObservableObject {
     
     private func scheduleOneTimeAlarm(content: UNMutableNotificationContent, alarm: Alarm) {
         guard let triggerDate = alarm.nextTriggerDate else { 
-            print("❌ Could not calculate next trigger date for alarm")
+            print("Could not calculate next trigger date for alarm")
             return 
         }
         
-        print("🔔 Next trigger date: \(triggerDate)")
+        print("Next trigger date: \(triggerDate)")
         
         let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
@@ -97,11 +90,11 @@ class NotificationService: NSObject, ObservableObject {
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("❌ Error scheduling notification: \(error)")
+                print("Error scheduling notification: \(error)")
             } else {
-                print("✅ One-time notification scheduled successfully!")
-                print("✅ Notification ID: \(alarm.id.uuidString)")
-                print("✅ Trigger date: \(triggerDate)")
+                print("One-time notification scheduled successfully!")
+                print("Notification ID: \(alarm.id.uuidString)")
+                print("Trigger date: \(triggerDate)")
             }
         }
     }
@@ -123,9 +116,9 @@ class NotificationService: NSObject, ObservableObject {
             
             UNUserNotificationCenter.current().add(request) { error in
                 if let error = error {
-                    print("❌ Error scheduling recurring notification for day \(dayIndex): \(error)")
+                    print("Error scheduling recurring notification for day \(dayIndex): \(error)")
                 } else {
-                    print("✅ Recurring notification scheduled for day \(dayIndex)!")
+                    print("Recurring notification scheduled for day \(dayIndex)!")
                 }
             }
         }
@@ -146,11 +139,11 @@ class NotificationService: NSObject, ObservableObject {
     
     func checkPendingNotifications() {
         UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
-            print("🔍 Pending notifications: \(requests.count)")
+            print("Pending notifications: \(requests.count)")
             for request in requests {
-                print("🔍 - ID: \(request.identifier)")
-                print("🔍 - Title: \(request.content.title)")
-                print("🔍 - Trigger: \(request.trigger?.description ?? "nil")")
+                print("- ID: \(request.identifier)")
+                print("- Title: \(request.content.title)")
+                print("- Trigger: \(request.trigger?.description ?? "nil")")
             }
         }
     }
@@ -167,9 +160,9 @@ class NotificationService: NSObject, ObservableObject {
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("❌ Test notification failed: \(error)")
+                print("Test notification failed: \(error)")
             } else {
-                print("✅ Test notification scheduled!")
+                print("Test notification scheduled!")
             }
         }
     }
@@ -191,9 +184,9 @@ class NotificationService: NSObject, ObservableObject {
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("❌ Test notification failed: \(error)")
+                print("Test notification failed: \(error)")
             } else {
-                print("✅ Test notification scheduled!")
+                print("Test notification scheduled!")
             }
         }
     }

@@ -1,10 +1,3 @@
-//
-//  AppTheme.swift
-//  Snooze u Looze
-//
-//  Created by Nikhil Konkimalla on 10/12/25.
-//
-
 import SwiftUI
 
 struct AppTheme {

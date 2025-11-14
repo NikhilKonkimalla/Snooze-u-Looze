@@ -1,10 +1,3 @@
-//
-//  SupabaseService.swift
-//  Snooze u Looze
-//
-//  Created by Nikhil Konkimalla on 10/12/25.
-//
-
 import Foundation
 import Supabase
 
@@ -79,7 +72,7 @@ class SupabaseService: ObservableObject {
     }
     
     func createAlarm(_ alarm: Alarm) async throws -> Alarm {
-        print("💾 Creating alarm in Supabase: \(alarm.id)")
+        print("Creating alarm in Supabase: \(alarm.id)")
         do {
             let response: Alarm = try await client
                 .from("alarms")
@@ -89,10 +82,10 @@ class SupabaseService: ObservableObject {
                 .execute()
                 .value
             
-            print("✅ Alarm created successfully in Supabase")
+            print("Alarm created successfully in Supabase")
             return response
         } catch {
-            print("❌ Failed to create alarm in Supabase: \(error)")
+            print("Failed to create alarm in Supabase: \(error)")
             throw error
         }
     }

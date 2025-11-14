@@ -1,10 +1,3 @@
-//
-//  Snooze_u_LoozeApp.swift
-//  Snooze u Looze
-//
-//  Created by Nikhil Konkimalla on 10/12/25.
-//
-
 import SwiftUI
 import UserNotifications
 
@@ -23,9 +16,9 @@ struct Snooze_u_LoozeApp: App {
         Task {
             do {
                 try await NotificationService.shared.requestAuthorization()
-                print("✅ Notification permissions granted")
+                print("Notification permissions granted")
             } catch {
-                print("❌ Failed to get notification permissions: \(error)")
+                print("Failed to get notification permissions: \(error)")
             }
         }
         
@@ -45,7 +38,7 @@ struct Snooze_u_LoozeApp: App {
             .fullScreenCover(isPresented: $showAlarmRinging) {
                 if let alarm = currentAlarm {
                     AlarmRingingView(alarm: alarm) {
-                        print("🔔 AlarmRingingView dismissed")
+                        print("AlarmRingingView dismissed")
                         showAlarmRinging = false
                         currentAlarm = nil
                     }
@@ -53,7 +46,7 @@ struct Snooze_u_LoozeApp: App {
             }
             .onAppear {
                 NotificationDelegate.shared.onAlarmTriggered = { alarm in
-                    print("🔔 Alarm triggered callback received - showing AlarmRingingView")
+                    print("Alarm triggered callback received - showing AlarmRingingView")
                     currentAlarm = alarm
                     showAlarmRinging = true
                 }
@@ -92,7 +85,7 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Observab
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        print("🔔 Notification received in foreground: \(notification.request.identifier)")
+        print("Notification received in foreground: \(notification.request.identifier)")
         handleAlarmNotification(notification)
         completionHandler([.banner, .sound]) // Include .sound for notification audio
     }
@@ -103,25 +96,25 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Observab
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        print("🔔 Notification tapped: \(response.notification.request.identifier)")
+        print("Notification tapped: \(response.notification.request.identifier)")
         handleAlarmNotification(response.notification)
         completionHandler()
     }
     
     private func handleAlarmNotification(_ notification: UNNotification) {
-        print("🔔 Handling alarm notification...")
+        print("Handling alarm notification...")
         let userInfo = notification.request.content.userInfo
-        print("🔔 User info: \(userInfo)")
+        print("User info: \(userInfo)")
         
         guard let alarmIdString = userInfo["alarmId"] as? String,
               let alarmId = UUID(uuidString: alarmIdString),
               let taskString = userInfo["task"] as? String,
               let task = AlarmTask(rawValue: taskString) else {
-            print("❌ Failed to parse alarm notification data")
+            print("Failed to parse alarm notification data")
             return
         }
         
-        print("🔔 Parsed alarm - ID: \(alarmId), Task: \(task)")
+        print("Parsed alarm - ID: \(alarmId), Task: \(task)")
         
         // Create alarm object from notification data
         let alarm = Alarm(
@@ -131,8 +124,8 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Observab
             task: task
         )
         
-        print("🔔 Triggering alarm view...")
-        print("🔔 Starting continuous alarm sound...")
+        print("Triggering alarm view...")
+        print("Starting continuous alarm sound...")
         
         // Start the continuous alarm sound immediately
         AlarmSoundService.shared.startAlarm()

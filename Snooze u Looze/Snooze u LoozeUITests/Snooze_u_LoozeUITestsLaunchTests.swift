@@ -1,10 +1,3 @@
-//
-//  Snooze_u_LoozeUITestsLaunchTests.swift
-//  Snooze u LoozeUITests
-//
-//  Created by Nikhil Konkimalla on 10/12/25.
-//
-
 import XCTest
 
 final class Snooze_u_LoozeUITestsLaunchTests: XCTestCase {

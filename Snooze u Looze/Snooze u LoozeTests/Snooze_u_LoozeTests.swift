@@ -1,10 +1,3 @@
-//
-//  Snooze_u_LoozeTests.swift
-//  Snooze u LoozeTests
-//
-//  Created by Nikhil Konkimalla on 10/12/25.
-//
-
 import Testing
 @testable import Snooze_u_Looze
 

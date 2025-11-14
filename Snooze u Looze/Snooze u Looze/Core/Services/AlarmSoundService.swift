@@ -1,10 +1,3 @@
-//
-//  AlarmSoundService.swift
-//  Snooze u Looze
-//
-//  Created by Nikhil Konkimalla on 10/12/25.
-//
-
 import Foundation
 import AVFoundation
 import AudioToolbox
@@ -32,16 +25,16 @@ class AlarmSoundService: ObservableObject {
             // This allows notifications to play sound while preserving alarm audio
             try audioSession.setCategory(.playback, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
             try audioSession.setActive(true)
-            print("🔊 Audio session configured for playback with notification compatibility")
+            print("Audio session configured for playback with notification compatibility")
         } catch {
-            print("❌ Failed to setup audio session: \(error)")
+            print("Failed to setup audio session: \(error)")
             // Fallback to simpler configuration
             do {
                 try audioSession.setCategory(.playback, mode: .default)
                 try audioSession.setActive(true)
-                print("🔊 Audio session configured with fallback settings")
+                print("Audio session configured with fallback settings")
             } catch {
-                print("❌ Failed to setup audio session even with fallback: \(error)")
+                print("Failed to setup audio session even with fallback: \(error)")
             }
         }
     }
@@ -52,17 +45,17 @@ class AlarmSoundService: ObservableObject {
         isBackgroundAudioEnabled = backgroundModes.contains("audio")
         
         if !isBackgroundAudioEnabled {
-            print("⚠️ Background audio not enabled - alarms may not work when app is backgrounded")
+            print("Background audio not enabled - alarms may not work when app is backgrounded")
         }
     }
     
     func startAlarm() {
-        print("🔊 Starting continuous alarm sound...")
-        print("🔊 isPlaying: \(isPlaying)")
-        print("🔊 Background audio enabled: \(isBackgroundAudioEnabled)")
+        print("Starting continuous alarm sound...")
+        print("isPlaying: \(isPlaying)")
+        print("Background audio enabled: \(isBackgroundAudioEnabled)")
         
         guard !isPlaying else { 
-            print("🔊 Alarm already playing")
+            print("Alarm already playing")
             return 
         }
         
@@ -73,21 +66,21 @@ class AlarmSoundService: ObservableObject {
         startBackgroundTask()
         
         // Use iOS system alarm sounds for familiar experience
-        print("🔊 Playing iOS alarm sound")
+        print("Playing iOS alarm sound")
         playIOSAlarmSound()
         
         isPlaying = true
     }
     
     func stopAlarm() {
-        print("🔇 Stopping alarm sound...")
+        print("Stopping alarm sound...")
         audioPlayer?.stop()
         audioPlayer = nil
         alarmTimer?.invalidate()
         alarmTimer = nil
         endBackgroundTask()
         isPlaying = false
-        print("✅ Alarm sound stopped")
+        print("Alarm sound stopped")
     }
     
     // MARK: - Background Audio Management
@@ -135,7 +128,7 @@ class AlarmSoundService: ObservableObject {
     
     private func playIOSAlarmSound() {
         // Use iOS system alarm sounds for familiar alarm experience
-        print("🔊 Playing iOS alarm sound...")
+        print("Playing iOS alarm sound...")
         
         // Try to load iOS system alarm sounds
         if let alarmSoundURL = getIOSAlarmSoundURL() {
@@ -164,12 +157,12 @@ class AlarmSoundService: ObservableObject {
             let soundURL = URL(fileURLWithPath: soundPath)
             
             if FileManager.default.fileExists(atPath: soundPath) {
-                print("🔊 Found iOS alarm sound: \(soundName)")
+                print("Found iOS alarm sound: \(soundName)")
                 return soundURL
             }
         }
         
-        print("🔊 No iOS alarm sound files found, using system sound IDs")
+        print("No iOS alarm sound files found, using system sound IDs")
         return nil
     }
     
@@ -185,20 +178,20 @@ class AlarmSoundService: ObservableObject {
             
             let success = audioPlayer?.play() ?? false
             if success {
-                print("🔊 iOS alarm sound playing continuously")
+                print("iOS alarm sound playing continuously")
             } else {
-                print("❌ Failed to start iOS alarm sound, using fallback")
+                print("Failed to start iOS alarm sound, using fallback")
                 playSystemAlarmSounds()
             }
         } catch {
-            print("❌ Failed to play iOS alarm sound: \(error)")
+            print("Failed to play iOS alarm sound: \(error)")
             playSystemAlarmSounds()
         }
     }
     
     private func playSystemAlarmSounds() {
         // Fallback to system sound IDs - these are the same sounds iOS Clock app uses
-        print("🔊 Playing iOS system alarm sounds...")
+        print("Playing iOS system alarm sounds...")
         
         // Use a timer to play system sounds continuously
         alarmTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
@@ -211,24 +204,24 @@ class AlarmSoundService: ObservableObject {
             AudioServicesPlaySystemSound(1005) // This is the actual iOS alarm sound
             AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
             
-            print("🔊 iOS alarm sound played")
+            print("iOS alarm sound played")
         }
         
         // Play immediately
         AudioServicesPlaySystemSound(1005)
         AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
-        print("🔊 iOS system alarm started - playing every 1 second")
+        print("iOS system alarm started - playing every 1 second")
     }
     
     // MARK: - Test Method (for debugging)
     
     func testAlarmSound() {
-        print("🧪 Testing alarm sound...")
+        print("Testing alarm sound...")
         startAlarm()
         
         // Stop after 5 seconds for testing
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            print("🧪 Test alarm stopping...")
+            print("Test alarm stopping...")
             self.stopAlarm()
         }
     }

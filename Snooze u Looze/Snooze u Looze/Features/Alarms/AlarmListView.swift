@@ -1,10 +1,3 @@
-//
-//  AlarmListView.swift
-//  Snooze u Looze
-//
-//  Created by Nikhil Konkimalla on 10/12/25.
-//
-
 import SwiftUI
 
 struct AlarmListView: View {
@@ -34,7 +27,7 @@ struct AlarmListView: View {
                     // Show notification permission warning
                     if !NotificationService.shared.isAuthorized {
                         VStack(spacing: 8) {
-                            Text("⚠️ Notifications Disabled")
+                            Text("Notifications Disabled")
                                 .font(.headline)
                                 .foregroundColor(.red)
                             

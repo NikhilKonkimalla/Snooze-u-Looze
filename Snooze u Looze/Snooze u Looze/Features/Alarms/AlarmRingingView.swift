@@ -1,10 +1,3 @@
-//
-//  AlarmRingingView.swift
-//  Snooze u Looze
-//
-//  Created by Nikhil Konkimalla on 10/12/25.
-//
-
 import SwiftUI
 import AVFoundation
 
@@ -23,12 +16,12 @@ struct AlarmRingingView: View {
                 CameraView(
                     task: alarm.task,
                     onVerificationSuccess: {
-                        print("🔔 Task verification successful!")
+                        print("Task verification successful!")
                         soundService.stopAlarm()
                         onDismiss()
                     },
                     onVerificationFailure: {
-                        print("🔔 Task verification failed - keep alarm ringing")
+                        print("Task verification failed - keep alarm ringing")
                         // Keep the alarm ringing until verification succeeds
                     }
                 )
@@ -61,18 +54,18 @@ struct AlarmRingingView: View {
                     // Action buttons
                     VStack(spacing: 20) {
                         Button("Take Photo to Verify") {
-                            print("🔔 Starting camera for task verification")
-                            print("🔔 Requesting camera permission first...")
+                            print("Starting camera for task verification")
+                            print("Requesting camera permission first...")
                             
                             // Request camera permission first
                             AVCaptureDevice.requestAccess(for: .video) { granted in
-                                print("📷 Camera permission result: \(granted)")
+                                print("Camera permission result: \(granted)")
                                 DispatchQueue.main.async {
                                     if granted {
-                                        print("✅ Camera permission granted - showing camera")
+                                        print("Camera permission granted - showing camera")
                                         showCamera = true
                                     } else {
-                                        print("❌ Camera permission denied")
+                                        print("Camera permission denied")
                                         // Could show an alert here
                                     }
                                 }
@@ -92,26 +85,26 @@ struct AlarmRingingView: View {
                             Button("Debug: Check Camera Permission") {
                                 // Check Info.plist content
                                 if let cameraUsage = Bundle.main.object(forInfoDictionaryKey: "NSCameraUsageDescription") as? String {
-                                    print("📷 Info.plist camera usage description: \(cameraUsage)")
+                                    print("Info.plist camera usage description: \(cameraUsage)")
                                 } else {
-                                    print("❌ No NSCameraUsageDescription found in Info.plist!")
+                                    print("No NSCameraUsageDescription found in Info.plist!")
                                 }
                                 
                                 let status = AVCaptureDevice.authorizationStatus(for: .video)
-                                print("📷 Current camera permission status: \(status.rawValue)")
-                                print("📷 Status description: \(status)")
+                                print("Current camera permission status: \(status.rawValue)")
+                                print("Status description: \(status)")
                                 
                                 switch status {
                                 case .authorized:
-                                    print("✅ Camera is authorized")
+                                    print("Camera is authorized")
                                 case .denied:
-                                    print("❌ Camera is denied")
+                                    print("Camera is denied")
                                 case .notDetermined:
-                                    print("❓ Camera permission not determined")
+                                    print("Camera permission not determined")
                                 case .restricted:
-                                    print("🚫 Camera is restricted")
+                                    print("Camera is restricted")
                                 @unknown default:
-                                    print("❓ Unknown camera status")
+                                    print("Unknown camera status")
                                 }
                             }
                             .padding(.horizontal, 20)
@@ -122,7 +115,7 @@ struct AlarmRingingView: View {
                             .cornerRadius(8)
                             
                             Button("Debug: Mark as Verified") {
-                                print("🔔 DEBUG: Task marked as verified")
+                                print("DEBUG: Task marked as verified")
                                 soundService.stopAlarm()
                                 onDismiss()
                             }
@@ -140,12 +133,12 @@ struct AlarmRingingView: View {
             }
         }
         .onAppear {
-            print("🔔 AlarmRingingView appeared for task: \(alarm.task.displayName)")
+            print("AlarmRingingView appeared for task: \(alarm.task.displayName)")
             scale = 1.2
-            print("🔔 AlarmRingingView ready - alarm should already be playing")
+            print("AlarmRingingView ready - alarm should already be playing")
         }
         .onDisappear {
-            print("🔔 AlarmRingingView disappeared")
+            print("AlarmRingingView disappeared")
             soundService.stopAlarm()
         }
         .interactiveDismissDisabled()

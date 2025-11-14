@@ -1,10 +1,3 @@
-//
-//  AuthViewModel.swift
-//  Snooze u Looze
-//
-//  Created by Nikhil Konkimalla on 10/12/25.
-//
-
 import Foundation
 import SwiftUI
 
@@ -23,10 +16,10 @@ class AuthViewModel: ObservableObject {
         
         do {
             try await supabaseService.signIn(email: email, password: password)
-            print("✅ Sign in successful")
+            print("Sign in successful")
         } catch {
             errorMessage = error.localizedDescription
-            print("❌ Sign in failed: \(error)")
+            print("Sign in failed: \(error)")
         }
         
         isLoading = false
@@ -38,10 +31,10 @@ class AuthViewModel: ObservableObject {
         
         do {
             try await supabaseService.signUp(email: email, password: password)
-            print("✅ Sign up successful")
+            print("Sign up successful")
         } catch {
             errorMessage = error.localizedDescription
-            print("❌ Sign up failed: \(error)")
+            print("Sign up failed: \(error)")
         }
         
         isLoading = false
@@ -50,9 +43,9 @@ class AuthViewModel: ObservableObject {
     func signOut() async {
         do {
             try await supabaseService.signOut()
-            print("✅ Sign out successful")
+            print("Sign out successful")
         } catch {
-            print("❌ Sign out failed: \(error)")
+            print("Sign out failed: \(error)")
         }
     }
 }

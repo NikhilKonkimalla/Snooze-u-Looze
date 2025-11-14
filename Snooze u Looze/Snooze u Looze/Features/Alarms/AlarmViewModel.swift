@@ -1,10 +1,3 @@
-//
-//  AlarmViewModel.swift
-//  Snooze u Looze
-//
-//  Created by Nikhil Konkimalla on 10/12/25.
-//
-
 import Foundation
 import Combine
 
@@ -57,7 +50,7 @@ class AlarmViewModel: ObservableObject {
             errorMessage = nil
         } catch {
             // Failed to sync to Supabase, but alarm still works locally
-            print("⚠️ Failed to sync alarm to Supabase: \(error.localizedDescription)")
+            print("Failed to sync alarm to Supabase: \(error.localizedDescription)")
             // Don't remove from local list - alarm still works!
             errorMessage = "Alarm created locally (sync failed: \(error.localizedDescription))"
         }
@@ -90,7 +83,7 @@ class AlarmViewModel: ObservableObject {
             try await supabaseService.updateAlarm(alarm)
             errorMessage = nil
         } catch {
-            print("⚠️ Failed to sync alarm update to Supabase: \(error.localizedDescription)")
+            print("Failed to sync alarm update to Supabase: \(error.localizedDescription)")
             errorMessage = "Alarm updated locally (sync failed: \(error.localizedDescription))"
         }
     }
